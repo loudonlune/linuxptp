@@ -1116,7 +1116,7 @@ static void create_symlink(const char *target, const char *path)
 }
 
 struct clock *clock_create(enum clock_type type, struct config *config,
-			   const char *phc_device)
+			   const char *phc_device, int always_use_phc)
 {
 	int conf_phc_index, i, max_adj = 0, phc_index, required_modes = 0, sfl, sw_ts;
 	enum servo_type servo = config_get_int(config, NULL, "clock_servo");
@@ -1245,7 +1245,7 @@ struct clock *clock_create(enum clock_type type, struct config *config,
 	/* determine PHC Clock index */
 	if (config_get_int(config, NULL, "free_running")) {
 		phc_index = -1;
-	} else if (timestamping == TS_SOFTWARE || timestamping == TS_LEGACY_HW) {
+	} else if (!always_use_phc && (timestamping == TS_SOFTWARE || timestamping == TS_LEGACY_HW)) {
 		phc_index = -1;
 	} else if (phc_device) {
 		if (1 != sscanf(phc_device, "/dev/ptp%d", &phc_index)) {

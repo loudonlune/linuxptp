@@ -63,6 +63,7 @@ static void usage(char *progname)
 		" -l [num]  set the logging level to 'num'\n"
 		" -m        print messages to stdout\n"
 		" -q        do not print messages to the syslog\n"
+		" -c		always use the specified PHC device, even in software timestamping mode\n"
 		" -v        prints the software version and exits\n"
 		" -h        prints this message and exits\n"
 		"\n",
@@ -73,7 +74,7 @@ int main(int argc, char *argv[])
 {
 	char *config = NULL, *req_phc = NULL, *progname;
 	enum clock_type type = CLOCK_TYPE_ORDINARY;
-	int c, err = -1, index, cmd_line_print_level;
+	int c, err = -1, index, cmd_line_print_level, always_use_the_phc = 0;
 	struct clock *clock = NULL;
 	struct option *opts;
 	struct config *cfg;
@@ -90,7 +91,7 @@ int main(int argc, char *argv[])
 	/* Process the command line arguments. */
 	progname = strrchr(argv[0], '/');
 	progname = progname ? 1+progname : argv[0];
-	while (EOF != (c = getopt_long(argc, argv, "AEP246HSLf:i:p:sl:mqvh",
+	while (EOF != (c = getopt_long(argc, argv, "AEP246HSLf:i:p:sl:mqcvh",
 				       opts, &index))) {
 		switch (c) {
 		case 0:
@@ -162,6 +163,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'q':
 			config_set_int(cfg, "use_syslog", 0);
+			break;
+		case 'c':
+			always_use_the_phc = 1;
 			break;
 		case 'v':
 			version_show(stdout);
@@ -248,7 +252,7 @@ int main(int argc, char *argv[])
 		goto out;
 	}
 
-	clock = clock_create(type, cfg, req_phc);
+	clock = clock_create(type, cfg, req_phc, always_use_the_phc);
 	if (!clock) {
 		fprintf(stderr, "failed to create a clock\n");
 		goto out;
